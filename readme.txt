@@ -23,6 +23,8 @@ Upload the IE plugin to your blog, Activate it, the add the following code to yo
 
 `<?php if (function_exists("ie_check")) { ie_check(); } ?>`
 
+I recommend adding it to your footer.php
+
 Finito!
 
 == Features ==
@@ -34,5 +36,5 @@ Finito!
 
 == Changelog ==
 
-= 1.0.0 =
-* First version
+= 0.8.0 =
+* First released version
