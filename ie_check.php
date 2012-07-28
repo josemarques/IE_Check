@@ -1,16 +1,19 @@
 <?php
 /**
  * @package IE Check
- * @version 1.0.0
+ * @version 0.8.0
  */
 /*
 Plugin Name: IE Check
 Plugin URI: http://josemarqu.es/ie-check/
 Description: Checks if the browser is an older version of Internet Explorer, releases rage if it's IE<9
 Author: José Marques
-Version: 1.0
+Version: 0.8.0
 Author URI: http://josemarqu.es
+License: GPL2
 */
+
+//TODO: plugin folder name cannot be hardcoded
 
 
 // Set-up Action and Filter Hooks
@@ -19,7 +22,7 @@ register_deactivation_hook(__FILE__, 'iecheck_delete_plugin_options');
 register_uninstall_hook(__FILE__, 'iecheck_delete_plugin_options');
 add_action('admin_init', 'iecheck_init' );
 add_action('admin_menu', 'iecheck_add_options_page');
-add_filter( 'plugin_action_links', 'iecheck_plugin_action_links', 10, 2 );
+//add_filter( 'plugin_action_links', 'iecheck_plugin_action_links', 10, 2 );
 
 
 // Init plugin options to white list our options
@@ -32,12 +35,13 @@ function iecheck_add_defaults() {
 	$tmp = get_option('iecheck_options');
     if(($tmp['chk_default_options_db']=='1')||(!is_array($tmp))) {
 		delete_option('iecheck_options'); // so we don't have to reset all the 'off' checkboxes too! (don't think this is needed but leave for now)
-		$arr = array(	"title" => "Wow",
-						"text" => "",
-						"browserPageURI" => "http://http://browsehappy.com/",
-						"footerText" => "Please upgrade! It will make everyone happy!",
-						"allowDismiss" => "yes",
-						"displayMode" => "fullScreen"
+		$arr = array(	'title' => 'Wow',	
+						'show_browser_age' => 'true',					
+						'browser_page_URI' => 'http://browsehappy.com/',
+						'message' => 'Please upgrade! It will make everyone happier!',
+						'allow_dismiss' => 'true',
+						'display_mode' => 'fullScreen',
+						'last_supported_version' => 9
 		);
 		update_option('iecheck_options', $arr);
 	}
@@ -56,8 +60,11 @@ function iecheck_add_options_page() {
 
 
 // Render the Plugin options form
+// TODO: folder name cannot be hardcoded
 function iecheck_render_form() {
+
 	?>
+	
 	<link rel="stylesheet" type="text/css" href="<?php echo plugins_url(); ?>/IE-Check/plugin.css" />
 	<div class="wrap ie_check">
 		
@@ -72,50 +79,59 @@ function iecheck_render_form() {
 			<?php settings_fields('iecheck_plugin_options'); ?>
 			<?php $options = get_option('iecheck_options'); ?>
 
+
 			<p>
-				<label>Title</label>
-				<input type="text" size="50" name="iecheck_options[title]" value="<?php echo $options['title']; ?>" />
+				<label>IE version supported</label>
+				<select name='iecheck_options[last_supported_version]'>
+					<option value='7' <?php selected(7, $options['last_supported_version']); ?>>Internet Explorer 7</option>
+					<option value='8' <?php selected(8, $options['last_supported_version']); ?>>Internet Explorer 8</option>
+					<option value='9' <?php selected(9, $options['last_supported_version']); ?>>Internet Explorer 9</option>							
+				</select>
 			</p>
-			<p class="wysiwyg">
-				<label>Intro text</label>
-				<span>Leave this field empty if you want to see the standard intro message.</span>
-			</p>
-				<?php
-					$args = array("textarea_name" => "iecheck_options[text]","media_buttons" => false, "teeny" => true,"textarea_rows" =>3);
-					wp_editor( $options['text'], "iecheck_options[text]", $args );
-				?>
-				<span></span>
+
 			
 			<p>
-				<label>Browser page URI</label>
-				<input type="url" size="80" name="iecheck_options[browserPageURI]" value="<?php echo $options['browserPageURI']; ?>" />
+				<label>Display mode</label>
+				<select name='iecheck_options[display_mode]'>
+					<option value='fullScreen' <?php selected('fullScreen', $options['display_mode']); ?>>full screen</option>
+					<option value='header' <?php selected('header', $options['display_mode']); ?>>header</option>
+					<option value='footer' <?php selected('footer', $options['display_mode']); ?>>footer</option>							
+				</select>
 			</p>
+
+			<p>
+				<label>Browser page URI</label>
+				<input type="url" size="80" name="iecheck_options[browser_page_URI]" value="<?php echo $options['browser_page_URI']; ?>" />
+			</p>
+
+
+			<p>
+				<label>Title</label>
+				<input type="text" size="50" name="iecheck_options[title]" value="<?php echo $options[ 'title' ]; ?>" />
+			</p>
+
+			<p>
+				<label>Display browser age?</label>				
+				
+				<input name="iecheck_options[show_browser_age]" type="checkbox" value="true"  <?php if ($options[ 'show_browser_age' ] == 'true') echo 'checked="checked"'; ?> />
+			</p>
+						
+			
 			<p class="wysiwyg">
-				<label>Footer text</label>
+				<label>Message</label>
 			</p>
 				<?php
-					$args = array("textarea_name" => "iecheck_options[footerText]","media_buttons" => false, "teeny" => true,"textarea_rows" =>3);
-					wp_editor( $options['footerText'], "iecheck_options[footerText]", $args );
+					$args = array("textarea_name" => "iecheck_options[message]","media_buttons" => false, "teeny" => true,"textarea_rows" =>3);
+					wp_editor( $options['message'], "iecheck_options[message]", $args );
 				?>
 				<span></span>
 				
 			<p>
-				<label class="options">Allow warning dismissal</label>
-
-				<label class="options"><input name="iecheck_options[allowDismiss]" type="radio" value="yes" <?php checked('yes', $options['allowDismiss']); ?> /> Yes</label>
-
-				<label class="options"><input name="iecheck_options[allowDismiss]" type="radio" value="no" <?php checked('no', $options['allowDismiss']); ?> /> No</label>
+				<label class="options">Show dismiss button</label><input name="iecheck_options[allow_dismiss]" type="checkbox" value="true"  <?php if ($options[ 'allow_dismiss' ] == 'true') echo 'checked="checked"'; ?> />
 
 			</p>	
 
-			<p>
-				<label>Display mode</label>
-				<select name='iecheck_options[displayMode]'>
-					<option value='fullScreen' <?php selected('fullScreen', $options['displayMode']); ?>>full screen</option>
-					<option value='header' <?php selected('header', $options['displayMode']); ?>>header</option>
-					<option value='footer' <?php selected('footer', $options['displayMode']); ?>>footer</option>							
-				</select>
-			</p>	
+				
 
 			<p class="submit">
 				<input type="submit" class="button-primary" value="<?php _e('Save Changes') ?>" />
@@ -152,7 +168,7 @@ function ie_check(){
 	$years = 0;
 	$years_label = " year";
 
-	if (preg_match('|MSIE ([0-9].[0-9]{1,2})|',$_SERVER['HTTP_USER_AGENT'],$matched) ) {
+	if (preg_match('|MSIE ([0-9].[0-9]{1,2})|',$_SERVER['HTTP_USER_AGENT'],$matched)) {
     	
     	$browser_version=$matched[1];
 
@@ -181,42 +197,33 @@ function ie_check(){
 	    	//this should be the link to the plugin folder, if the path is not the stand it will not work
 	    	echo '<link rel="stylesheet" type="text/css" href="'.plugins_url().'/IE-Check/ie_check.css" />';
 
-    		//load jQuery
-	    	if(!wp_script_is('jquery')) {
-			    wp_enqueue_script("jquery"); 
-			} 
-
-			echo '<script type="text/javascript" >
-		    			jQuery(document).ready(function(){jQuery("body").addClass("'.$options['displayMode'].'Warning");});
-		    	</script>';
-
-			echo '<div class="browserFeedback '.$options['displayMode'].'">';
+			echo '<div id="browser-warning" class="browser-feedback '.$options['display_mode'].'">';
 			echo '<h3>'.$options['title'].'</h3>';
 			
-			if($options['text']!='')
-				echo '<div class="text">'.$options['text'].'</div>';
-			else{
-				echo '<p> You are using Microsoft Internet Explorer '.$browser_version.', which is over '.$years.$years_label.' old!!! </p>
-					<p>Seriously, you need to move on!</p>';
+			if($options[ 'show_browser_age' ]=='true'){
+				echo '<p>You are using Microsoft Internet Explorer '.$browser_version.', which is over '.$years.$years_label.' old! </p>';
 			}
-			echo '<p>Here is a <a href="'.$options['browserPageURI'].'">list of good browsers you can use</a>.</p>';
-			echo '<div class="footerText">'.$options['footerText'].'</div>';
-
-			if($options['allowDismiss']=='yes'){
-				echo '<p><a href="#" id="dismissWarning">Leave me alone</a></p>';
-
 			
 
-		    	echo '<script type="text/javascript" >
-		    			jQuery(document).ready(function(){
-		    				jQuery("#dismissWarning").click(function(){
-		    					jQuery(".browserFeedback").hide();
-		    				});
-						});
+			echo '<div class="message">'.$options['message'].'</div>';
+
+			echo '<p class="buttons"><a href="'.$options['browser_page_URI'].'" class="upgrade">Upgrade</a>';
+
+			if($options['allow_dismiss']=='true'){
+				echo '<script type="text/javascript" >
+		    			function hide_warning(){			    				    				
+		    				document.getElementById("browser-warning").className  = document.getElementById("browser-warning").className + " hidden";	
+		    				document.getElementById("browser-warning").style.display="none";				
+		    			}
+
+		    			
 		    		</script>';
+				echo 'or  <a href="javascript:hide_warning();" >continue to website</a>';
+
+		    	
 			}
 				
-			echo '</div>';
+			echo '</p></div>';
 
 		}
    	 	

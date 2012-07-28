@@ -11,8 +11,8 @@
 }
 
 .ie_check p label{
-	font-size: 20px;
-	width: 180px;
+	
+	width: 200px;
 	display: inline-block;
 }
 
@@ -21,11 +21,7 @@
 	padding-right: 10px;
 }
 
-.ie_check p input[type="text"],
-.ie_check p input[type="url"],
-.ie_check p select {
-	font-size: 16px;
-}
+
 
 .ie_check p.submit{
 	border: none;
